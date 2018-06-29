@@ -1,6 +1,9 @@
 #!/usr/bin/python3.6
+import asyncio
 import requests
 import re
+
+from concurrent.futures import ThreadPoolExecutor
 
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
@@ -20,7 +23,19 @@ class Spider():
     cache = {}
 
     def __init__(self, uri):
-        self.uri = uri
+        self.uri      = uri
+        self.hostname = urlparse(self.uri).netloc
+
+        self.loop  = asyncio.get_event_loop()
+
+        # initalise pages with seed link
+        self.pages = [{
+            'uri'     : self.uri,
+            'links'   : self.get_links(self.uri),
+            'content' : self.get_content(self.uri)
+        }]
+
+        self.crawled  = [] # uris that have been crawled
 
     def cache_html(fn):
         def inner(uri):
@@ -70,37 +85,46 @@ class Spider():
 
         return links
 
+    async def async_get_links(self, uri):
+        """Gets every link in a page but asyncronously"""
+        html = await self.loop.run_in_executor(ThreadPoolExecutor(), self.request_page, uri)
+
+        links = [self.check_url(a['href']) for a in html.find_all('a', href=True)]
+
+        return links
+
+    async def handle_task(self, task_id, work_queue):
+        """Handles the async work for crawling"""
+        while not work_queue.empty():
+            link = await work_queue.get()
+            uri  = link['uri']
+
+            if uri not in self.crawled:
+                self.crawled.append(uri)
+
+                if self.hostname == urlparse(uri).netloc:
+                    links = await self.async_get_links(uri)
+                    for link in links:
+                        if 'error' not in link: work_queue.put_nowait(link)
+
+                    self.pages.append({
+                        'uri'     : uri,
+                        'links'   : links,
+                        'content' : self.get_content(uri)
+                    })
+
     def crawl(self):
-        """Gets all the pages in the website"""
-        hostname = urlparse(self.uri).netloc
+        """Sets the async queue, tasks, etc..."""
+        queue = asyncio.Queue()
 
-        # initalise pages with seed link
-        pages = [{
-            'uri'     : self.uri,
-            'links'   : self.get_links(self.uri),
-            'content' : self.get_content(self.uri)
-        }]
+        [queue.put_nowait(link) for link in self.get_links(self.uri)]
 
-        crawled  = []
-        to_crawl = self.get_links(self.uri)
+        tasks = [self.handle_task(task_id, queue) for task_id in range(10)]
 
-        while to_crawl:
-            page = to_crawl.pop()
-            uri  = page['uri']
+        self.loop.run_until_complete(asyncio.wait(tasks))
+        self.loop.close()
 
-            if not hostname == urlparse(uri).netloc: continue
-            if uri in crawled: continue
-
-            to_crawl += self.get_links(uri)
-            pages.append({
-                'uri'     : uri,
-                'links'   : self.get_links(uri),
-                'content' : self.get_content(uri)
-            })
-
-            crawled.append(uri)
-
-        return pages
+        return self.pages
 
 def Query():
     pass
