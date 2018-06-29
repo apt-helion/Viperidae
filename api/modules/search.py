@@ -30,13 +30,12 @@ class Spider():
 
         # initalise pages with seed link
         self.pages = [{
-            self.uri : {
-                'links'   : self.get_links(self.uri),
-                'content' : self.get_content(self.uri)
-            }
+            'uri'     : self.uri,
+            'links'   : self.get_links(self.uri),
+            'content' : self.get_content(self.uri)
         }]
 
-        self.crawled  = [] # uris that have been crawled
+        self.crawled  = [self.url] # uris that have been crawled
 
     def cache_html(fn):
         def inner(uri):
@@ -76,7 +75,10 @@ class Spider():
         """Gets important text from a webpage"""
         html = self.request_page(uri)
 
-        return html
+        return {
+            'title' : html.title.string,
+            'text'  : html.get_text()
+        }
 
     def get_links(self, uri):
         """Gets every link in a page"""
@@ -109,10 +111,9 @@ class Spider():
                         if 'error' not in link: work_queue.put_nowait(link)
 
                     self.pages.append({
-                        uri : {
-                            'links'   : links,
-                            'content' : self.get_content(uri)
-                        }
+                        'uri'     : uri,
+                        'links'   : links,
+                        'content' : self.get_content(uri)
                     })
 
     def crawl(self):
@@ -120,7 +121,6 @@ class Spider():
         queue = asyncio.Queue()
 
         [queue.put_nowait(link) for link in self.get_links(self.uri)]
-        self.crawled.append(self.uri) # make sure we don't crawl seed
 
         tasks = [self.handle_task(task_id, queue) for task_id in range(10)]
 
@@ -129,12 +129,59 @@ class Spider():
 
         return self.pages
 
-def Query():
-    pass
+class Query():
+    """
+    Query ranks pages it is given according to a query term
+
+    Example usage:
+    >>> uri = 'https://blog.justinduch.com'
+    >>> spider = Spider(uri)
+    >>> pages  = spider.crawl()
+    >>> Query(pages, 'test').search()
+    [...]
+    """
+
+    def __init__(self, pages, query):
+        self.pages = pages
+        self.query = query.lower()
+        self.words = re.split(" ", self.query)
+
+        self.ranked_pages = []
+
+    def link_rank(self, page):
+        """Adds to the rank of every page it points to"""
+        for link in page['links']:
+            uri = link['uri']
+            for r_page in self.ranked_pages:
+                if uri == r_page['uri']: r_page['l_rank'] += page['c_rank']
+
+    def content_rank(self, page):
+        """Gets a page and returns it with a rank based on content"""
+        rank = 0
+
+        for word in self.words:
+            rank += len(re.findall(word, page['content']['title'].lower())) * 2
+            rank += len(re.findall(word, page['content']['text'].lower()))
+
+        page['c_rank'] = rank
+        page['l_rank'] = 0 # initalise link rank
+
+        return page
+
+    def search(self):
+        for page in self.pages:
+            # Copy pages in to ranked_pages with ranks
+            self.ranked_pages.append(self.content_rank(page))
+
+        for page in self.ranked_pages:
+            self.link_rank(page) # rank pages from links
+
+        # Final pass to add ranks together
+        for page in self.ranked_pages:
+            page['rank'] = (page['c_rank'] + page['l_rank']) / 2
+
+        return sorted(self.ranked_pages, key=lambda k: k['rank'], reverse=True)
 
 if __name__ == "__main__":
-    # import doctest
-    # doctest.testmod()
-    uri = 'https://blog.justinduch.com'
-    spider = Spider(uri)
-    spider.crawl()
+    import doctest
+    doctest.testmod()

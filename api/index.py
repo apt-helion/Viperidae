@@ -19,7 +19,6 @@ def search(request):
     """Basic search function - site url & query"""
     uri   = request.args.get('u')
     query = request.args.get('q')
-    page  = request.args.get('p') or 1
 
     if not uri:   return die(400)
     if not query: return die(401)
@@ -27,7 +26,7 @@ def search(request):
     pages = Spider(uri).crawl()
     if 'error' in pages: die(pages['status'])
 
-    return Query(pages, query, page).search()
+    return Query(pages, query).search()
 
 @web('/authorize', POST)
 def auth(request):
