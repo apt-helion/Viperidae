@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Simplerr Configuration."""
 import sys
-sys.path.append('./website/')
+sys.path.append('./api/')
 import click
 import os
 from simplerr import dispatcher
