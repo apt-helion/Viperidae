@@ -30,9 +30,10 @@ class Spider():
 
         # initalise pages with seed link
         self.pages = [{
-            'uri'     : self.uri,
-            'links'   : self.get_links(self.uri),
-            'content' : self.get_content(self.uri)
+            self.uri : {
+                'links'   : self.get_links(self.uri),
+                'content' : self.get_content(self.uri)
+            }
         }]
 
         self.crawled  = [] # uris that have been crawled
@@ -101,16 +102,17 @@ class Spider():
 
             if uri not in self.crawled:
                 self.crawled.append(uri)
-
                 if self.hostname == urlparse(uri).netloc:
+
                     links = await self.async_get_links(uri)
                     for link in links:
                         if 'error' not in link: work_queue.put_nowait(link)
 
                     self.pages.append({
-                        'uri'     : uri,
-                        'links'   : links,
-                        'content' : self.get_content(uri)
+                        uri : {
+                            'links'   : links,
+                            'content' : self.get_content(uri)
+                        }
                     })
 
     def crawl(self):
@@ -118,6 +120,7 @@ class Spider():
         queue = asyncio.Queue()
 
         [queue.put_nowait(link) for link in self.get_links(self.uri)]
+        self.crawled.append(self.uri) # make sure we don't crawl seed
 
         tasks = [self.handle_task(task_id, queue) for task_id in range(10)]
 
