@@ -66,6 +66,7 @@ class Spider():
             '.odt', '.doc', '.pptx', '.csv', '.xlsx'
         )
 
+        if '?' in url or '#' in url: return None
         if url.lower().endswith(file_extentions): _file = True
         if url.endswith('/'): url = url[:-1] # strip any trailing backslashes
 
@@ -84,7 +85,7 @@ class Spider():
         """Gets every link in a page"""
         html = self.request_page(uri)
 
-        links = [self.check_url(a['href']) for a in html.find_all('a', href=True)]
+        links = [self.check_url(a['href']) for a in html.find_all('a', href=True) if self.check_url(a['href'])]
 
         return links
 
@@ -92,7 +93,7 @@ class Spider():
         """Gets every link in a page but asyncronously"""
         html = await self.loop.run_in_executor(ThreadPoolExecutor(), self.request_page, uri)
 
-        links = [self.check_url(a['href']) for a in html.find_all('a', href=True)]
+        links = [self.check_url(a['href']) for a in html.find_all('a', href=True) if self.check_url(a['href'])]
 
         return links
 
@@ -108,13 +109,14 @@ class Spider():
 
                     links = await self.async_get_links(uri)
                     for link in links:
-                        if 'error' not in link: work_queue.put_nowait(link)
+                        if not link['file']: work_queue.put_nowait(link)
 
                     self.pages.append({
                         'uri'     : uri,
                         'links'   : links,
                         'content' : self.get_content(uri)
                     })
+                    print(uri)
 
     async def crawl(self):
         """Sets the async queue, tasks, etc..."""
@@ -177,7 +179,7 @@ class Query():
 
         # Final pass to add ranks together
         for page in self.ranked_pages:
-            page['rank'] = (page['c_rank'] + page['l_rank']) / 2
+            page['rank'] = ((page['c_rank']*page['l_rank']) + page['l_rank']) / 2
 
         return sorted(self.ranked_pages, key=lambda k: k['rank'], reverse=True)
 

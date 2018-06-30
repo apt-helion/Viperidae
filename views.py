@@ -11,8 +11,13 @@ from api.modules.search import Query, Spider
 # from modules.developer import DevQuery
 
 async def index(request):
+    """Index's a site"""
     params = request.rel_url.query
-    return web.Response(text='Hello Aiohttp!')
+    uri    = params.get('u')
+    if not uri:   return web.json_response(die(400))
+
+    pages = await Spider(uri).crawl()
+    return web.json_response(pages)
 
 async def search(request):
     """Basic search function - site url & query"""
@@ -21,8 +26,8 @@ async def search(request):
     uri   = params.get('u')
     query = params.get('q')
 
-    if not uri:   return die(400)
-    if not query: return die(401)
+    if not uri:   return web.json_response(die(400))
+    if not query: return web.json_response(die(401))
 
     pages = await Spider(uri).crawl()
 
