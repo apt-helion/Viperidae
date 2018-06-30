@@ -4,7 +4,6 @@ import requests
 import re
 
 from concurrent.futures import ThreadPoolExecutor
-
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 
@@ -15,8 +14,9 @@ class Spider():
 
     Example usage:
     >>> uri = 'https://blog.justinduch.com'
-    >>> spider = Spider(uri)
-    >>> spider.crawl()
+    >>> spider  = Spider(uri)
+    >>> results = spider.crawl()
+    >>> results
     [...]
     """
 
@@ -26,7 +26,7 @@ class Spider():
         self.uri      = uri
         self.hostname = urlparse(self.uri).netloc
 
-        self.loop  = asyncio.get_event_loop()
+        self.loop = asyncio.get_event_loop()
 
         # initalise pages with seed link
         self.pages = [{
@@ -35,7 +35,7 @@ class Spider():
             'content' : self.get_content(self.uri)
         }]
 
-        self.crawled  = [self.url] # uris that have been crawled
+        self.crawled  = [self.uri] # uris that have been crawled
 
     def cache_html(fn):
         def inner(uri):
@@ -116,7 +116,7 @@ class Spider():
                         'content' : self.get_content(uri)
                     })
 
-    def crawl(self):
+    async def crawl(self):
         """Sets the async queue, tasks, etc..."""
         queue = asyncio.Queue()
 
@@ -124,8 +124,7 @@ class Spider():
 
         tasks = [self.handle_task(task_id, queue) for task_id in range(10)]
 
-        self.loop.run_until_complete(asyncio.wait(tasks))
-        self.loop.close()
+        await asyncio.wait(tasks)
 
         return self.pages
 
