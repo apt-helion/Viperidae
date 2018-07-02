@@ -2,6 +2,7 @@
 import asyncio
 import requests
 import re
+import gc
 
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse, urljoin
@@ -127,6 +128,12 @@ class Spider():
         tasks = [self.handle_task(task_id, queue) for task_id in range(10)]
 
         await asyncio.wait(tasks)
+
+        # I'm pretty sure Spider.cache causes a memory leak
+        # so this just makes sure it is cleared, we don't need it anymore
+        del(Spider.cache)
+        gc.collect()
+        Spider.cache = {}
 
         return self.pages
 
