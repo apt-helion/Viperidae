@@ -1,8 +1,9 @@
 # Viperidae2.0 API
 API and main application for viperidae2.0
 
-Main site [`viperidae.app`](https://viperidae.app)
-Developer docs/api [`developer.viperidae.app`](https://developer.viperidae.app)
+Main site --> [`viperidae.app`](https://viperidae.app) : [`viperidae-site`](https://github.com/apt-helion/viperidae-site)
+
+Developer docs/api --> [`developer.viperidae.app`](https://developer.viperidae.app) : [`viperidae-developers`](https://github.com/apt-helion/viperidae-developers)
 
 ## Setting up on a development environment 
 ```
