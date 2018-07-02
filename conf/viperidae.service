@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instace to serve api.viperidae.app
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/var/www/api.viperidae.app
+Environment="PATH=/var/www/api.viperidae.app/env/bin"
+ExecStart=/var/www/api.viperidae.app/env/bin/gunicorn main:factory --bind unix:viperidae.sock --worker-class aiohttp.GunicornWebWorker
+
+[Install]
+WantedBy=multi-user.target

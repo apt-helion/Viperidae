@@ -10,6 +10,9 @@ from api.modules.error import die
 from api.modules.search import Query, Spider
 # from modules.developer import DevQuery
 
+async def test(request):
+    return web.Response(text="api.viperidae.app is up")
+
 async def index(request):
     """Index's a site"""
     params = request.rel_url.query
