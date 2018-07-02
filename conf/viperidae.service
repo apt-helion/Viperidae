@@ -7,7 +7,7 @@ User=root
 Group=www-data
 WorkingDirectory=/var/www/api.viperidae.app
 Environment="PATH=/var/www/api.viperidae.app/env/bin"
-ExecStart=/var/www/api.viperidae.app/env/bin/gunicorn main:factory --bind unix:viperidae.sock --worker-class aiohttp.GunicornWebWorker
+ExecStart=/var/www/api.viperidae.app/env/bin/gunicorn main:factory --bind unix:viperidae.sock --worker-class aiohttp.GunicornWebWorker --error-logfile /var/log/viperidae/error.log --access-logfile /var/log/viperidae/access.log
 
 [Install]
 WantedBy=multi-user.target
