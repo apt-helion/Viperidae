@@ -29,7 +29,7 @@ Go to `0.0.0.0:8080` and you should be able to see the message `api.viperidae.ap
 
 ## Testing the api
 ### GET requests
-If your web browser allows for viewing JSON just the requests into there. e.g.
+If your web browser allows for viewing JSON, just put the requests into there. e.g.
 ```
 0.0.0.0:8080/index?u=https://blog.justinduch.com
 ```
@@ -37,6 +37,6 @@ If your web browser allows for viewing JSON just the requests into there. e.g.
 ### POST requests
 Use the script (coming soon) or cURL. e.g.
 ```
-> curl --headers "Authorization: Basic {base64string}" --data "q=test" 0.0.0.0:8080/devSearch
+curl --headers "Authorization: Basic {base64string}" --data "q=test" 0.0.0.0:8080/devsearch
 ```
 
