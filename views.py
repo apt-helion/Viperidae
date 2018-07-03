@@ -23,9 +23,8 @@ async def index(request):
 async def search(request):
     """Basic search function - site url & query"""
     params = request.rel_url.query
-
-    uri   = params.get('u')
-    query = params.get('q')
+    uri    = params.get('u')
+    query  = params.get('q')
 
     if not uri:   return web.json_response(error(400))
     if not query: return web.json_response(error(401))
@@ -36,10 +35,12 @@ async def search(request):
 
 async def auth(request):
     """Authenticate devs"""
+    post = await request.post()
+
     auth_header   = request.headers.get('Authorization')
     head          = auth_header.split("Basic")[1]
-    grant_type    = requests.body.get('grant_type')
-    refresh_token = requests.body.get('refresh_token', '')
+    grant_type    = post.get('grant_type')
+    refresh_token = post.get('refresh_token', '')
 
     client_id, client_secret = base64.b64decode(head).split(":")
 
