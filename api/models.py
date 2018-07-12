@@ -1,7 +1,7 @@
 import datetime
+
 from peewee import *
 from config import Config
-import math
 
 database = Config.DATABASE
 
@@ -38,3 +38,41 @@ class BaseModel(Model):
     class Meta:
         database = database
 
+class Clients(BaseModel):
+    id = CharField(column_name='client_id', null=False)
+    secret = CharField(column_name='client_secret', null=False)
+    name = CharField(column_name='name', null=False)
+    description = CharField(column_name='description', null=False)
+
+    user = ForeignKeyField(
+        column_name='user_id',
+        field='id',
+        model=Users,
+        null=False)
+
+    class Meta:
+        table_name = 'Clients'
+
+class Tokens(BaseModel):
+    id = CharField(column_name='token_id', null=False)
+    token = CharField(column_name='token', null=False)
+    refresh_token = CharField(column_name='refresh_token', null=False)
+    expiry = DateTimeField(column_name='expiry', null=False)
+
+    client = ForeignKeyField(
+        column_name='client_id',
+        field='id',
+        model=Clients,
+        null=False)
+
+    class Meta:
+        table_name = 'Tokens'
+
+class Users(BaseModel):
+    id = CharField(column_name='user_id', null=False)
+    username = CharField(column_name='username', null=False)
+    password = CharField(column_name='password', null=False)
+    email = CharField(column_name='email', null=False)
+
+    class Meta:
+        table_name = 'Users'

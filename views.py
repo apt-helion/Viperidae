@@ -5,20 +5,20 @@ from aiohttp import web
 
 # from api.models import *
 
-# from modules.auth import authorise
+from api.modules.auth import authorise, refresh
 from api.modules.error import die
 from api.modules.search import Query
 from api.modules.crawl import Spider
-# from modules.developer import DevQuery
+from api.modules.developer import DevQuery
 
 async def test(request):
     return web.Response(text="api.viperidae.app is up")
 
 async def index(request):
-    """Index's a site"""
+    """Indexes a site"""
     params = request.rel_url.query
     uri    = params.get('u')
-    if not uri:   return web.json_response(die(400))
+    if not uri:   return web.json_response(error(400))
 
     pages = await Spider(uri).crawl()
     return web.json_response(pages)
@@ -26,12 +26,11 @@ async def index(request):
 async def search(request):
     """Basic search function - site url & query"""
     params = request.rel_url.query
+    uri    = params.get('u')
+    query  = params.get('q')
 
-    uri   = params.get('u')
-    query = params.get('q')
-
-    if not uri:   return web.json_response(die(400))
-    if not query: return web.json_response(die(401))
+    if not uri:   return web.json_response(error(400))
+    if not query: return web.json_response(error(401))
 
     pages = await Spider(uri).crawl()
 
@@ -39,18 +38,27 @@ async def search(request):
 
 async def auth(request):
     """Authenticate devs"""
-    auth_header = request.headers.get('Authorization')
-    head        = auth_header.split("Basic")[1]
+    post = await request.post()
+
+    auth_header   = request.headers.get('Authorization')
+    head          = auth_header.split("Basic")[1]
+    grant_type    = post.get('grant_type')
+    refresh_token = post.get('refresh_token', '')
 
     client_id, client_secret = base64.b64decode(head).split(":")
 
-    if not client_id:     return die(450)
-    if not client_secret: return die(451)
+    if not grant_type:    return web.json_response(error(430))
+    if not client_id:     return web.json_response(error(450))
+    if not client_secret: return web.json_response(error(451))
 
-    return authorise(client_id, client_secret)
+    if grant_type == 'authorization_code':
+        return web.json_response(authorise(client_id, client_secret))
 
-def dev_search(request):
+    if grant_type == 'refresh_token':
+        return web.json_response(refresh_token(client_id, client_secret, refresh_token))
+
+    return web.json_response(error(431))
+
+async def dev_search(request):
     """Search function for devs - more features"""
     pass
-
-
