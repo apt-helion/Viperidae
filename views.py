@@ -7,7 +7,8 @@ from aiohttp import web
 
 # from modules.auth import authorise
 from api.modules.error import die
-from api.modules.search import Query, Spider
+from api.modules.search import Query
+from api.modules.crawl import Spider
 # from modules.developer import DevQuery
 
 async def test(request):
