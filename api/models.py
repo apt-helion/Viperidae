@@ -1,7 +1,7 @@
 import datetime
 
 from peewee import *
-from config import Config
+from .config import Config
 
 database = Config.DATABASE
 
@@ -38,6 +38,15 @@ class BaseModel(Model):
     class Meta:
         database = database
 
+class Users(BaseModel):
+    id = CharField(column_name='user_id', null=False)
+    username = CharField(column_name='username', null=False)
+    password = CharField(column_name='password', null=False)
+    email = CharField(column_name='email', null=False)
+
+    class Meta:
+        table_name = 'Users'
+
 class Clients(BaseModel):
     id = CharField(column_name='client_id', null=False)
     secret = CharField(column_name='client_secret', null=False)
@@ -68,11 +77,4 @@ class Tokens(BaseModel):
     class Meta:
         table_name = 'Tokens'
 
-class Users(BaseModel):
-    id = CharField(column_name='user_id', null=False)
-    username = CharField(column_name='username', null=False)
-    password = CharField(column_name='password', null=False)
-    email = CharField(column_name='email', null=False)
 
-    class Meta:
-        table_name = 'Users'

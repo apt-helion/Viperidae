@@ -6,7 +6,7 @@ from aiohttp import web
 # from api.models import *
 
 from api.modules.auth import authorise, refresh
-from api.modules.error import die
+from api.modules.error import error
 from api.modules.search import Query
 from api.modules.crawl import Spider
 from api.modules.developer import DevQuery

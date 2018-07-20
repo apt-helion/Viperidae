@@ -1,5 +1,5 @@
 #!env/bin/python
-from search import Query
+from .search import Query
 
 class DevQuery(Query):
     pass

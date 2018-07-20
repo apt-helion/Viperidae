@@ -1,7 +1,7 @@
 #!env/bin/python
 import uuid
 
-from error import error
+from .error import error
 from ..models import *
 
 from datetime import datetime
