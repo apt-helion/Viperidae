@@ -22,6 +22,7 @@ if 'DEVBOX' in os.environ:
                 user='<user>',
                 password='<password>',
             )
-
+    else:
+        class Config(ConfigBase): pass
 else:
     class Config(ConfigBase): pass
