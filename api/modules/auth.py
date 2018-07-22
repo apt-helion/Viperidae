@@ -1,4 +1,5 @@
-#!env/bin/python
+#!/usr/bin/env python
+
 import uuid
 
 from .error import error
@@ -6,10 +7,10 @@ from ..models import *
 
 from datetime import datetime
 
+
 def authorise(client_id, client_secret):
     """Create an access token"""
-    client = Clients.get(Clients.id == client_id,
-                         Clients.secret == client_secret)
+    client = Clients.get(Clients.id == client_id, Clients.secret == client_secret)
 
     if not client: return error(500)
 
@@ -31,10 +32,10 @@ def authorise(client_id, client_secret):
         "refresh_token" : refresh_token
     }
 
+
 def refresh(client_id, client_secret, refresh_token):
     """Refresh access token - only one refresh allowed"""
-    client = Clients.get(Clients.id == client_id,
-                         Clients.secret == client_secret)
+    client = Clients.get(Clients.id == client_id, Clients.secret == client_secret)
 
     if not client: return error(500)
     if not refresh_token: return error(600)

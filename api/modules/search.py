@@ -1,6 +1,7 @@
-#!/usr/bin/python3.6
+#!/usr/bin/env python
 
 import re
+
 
 class Query():
     """
@@ -10,9 +11,10 @@ class Query():
     >>> uri = 'https://blog.justinduch.com'
     >>> spider = Spider(uri)
     >>> pages  = spider.crawl()
-    >>> Query(pages, 'test').search()
+    >>> Query(pages, 'test').search() # doctest +ELLIPSIS
     [...]
     """
+
 
     def __init__(self, pages, query):
         self.pages = pages
@@ -21,12 +23,14 @@ class Query():
 
         self.ranked_pages = []
 
+
     def link_rank(self, page):
         """Adds to the rank of every page it points to"""
         for link in page['links']:
             uri = link['uri']
             for r_page in self.ranked_pages:
                 if uri == r_page['uri']: r_page['l_rank'] += page['c_rank']
+
 
     def content_rank(self, page):
         """Gets a page and returns it with a rank based on content"""
@@ -41,6 +45,7 @@ class Query():
 
         return page
 
+
     def search(self):
         for page in self.pages:
             # Copy pages in to ranked_pages with ranks
@@ -54,6 +59,7 @@ class Query():
             page['rank'] = ((page['c_rank']*page['l_rank']) + page['l_rank']) / 2
 
         return sorted(self.ranked_pages, key=lambda k: k['rank'], reverse=True)
+
 
 if __name__ == "__main__":
     import doctest

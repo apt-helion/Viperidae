@@ -1,4 +1,4 @@
-#!env/bin/python
+#!/usr/bin/env python
 
 ERROR_MESSAGES = {
     400 : 'No uri provided',

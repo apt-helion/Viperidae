@@ -1,4 +1,5 @@
-#!/usr/bin/python3.6
+#!/usr/bin/env python
+
 import asyncio
 import requests
 import gc
@@ -16,7 +17,7 @@ class Spider():
     >>> uri = 'https://blog.justinduch.com'
     >>> spider  = Spider(uri)
     >>> results = spider.crawl()
-    >>> results
+    >>> results # doctest +ELLPSIS
     [...]
     """
 
@@ -37,6 +38,7 @@ class Spider():
 
         self.crawled  = [self.uri] # uris that have been crawled
 
+
     def cache_html(fn):
         def inner(uri):
             cache_key = hash(uri)
@@ -47,6 +49,7 @@ class Spider():
 
         return inner
 
+
     @staticmethod
     @cache_html
     def request_page(uri):
@@ -55,6 +58,7 @@ class Spider():
         html  = BeautifulSoup(page.text, "html.parser")
 
         return html
+
 
     def check_url(self, uri):
         """Checks if the uri is a file or a webpage"""
@@ -72,6 +76,7 @@ class Spider():
 
         return { 'uri': url, 'file': _file }
 
+
     def get_content(self, uri):
         """Gets important text from a webpage"""
         html = self.request_page(uri)
@@ -81,6 +86,7 @@ class Spider():
             'text'  : html.get_text()
         }
 
+
     def get_links(self, uri):
         """Gets every link in a page"""
         html = self.request_page(uri)
@@ -89,6 +95,7 @@ class Spider():
 
         return links
 
+
     async def async_get_links(self, uri):
         """Gets every link in a page but asyncronously"""
         html = await self.loop.run_in_executor(ThreadPoolExecutor(), self.request_page, uri)
@@ -96,6 +103,7 @@ class Spider():
         links = [self.check_url(a['href']) for a in html.find_all('a', href=True) if self.check_url(a['href'])]
 
         return links
+
 
     async def handle_task(self, task_id, work_queue):
         """Handles the async work for crawling"""
@@ -118,6 +126,7 @@ class Spider():
                     })
                     print(uri)
 
+
     async def crawl(self):
         """Sets the async queue, tasks, etc..."""
         queue = asyncio.Queue()
@@ -130,11 +139,13 @@ class Spider():
 
         # I'm pretty sure Spider.cache causes a memory leak
         # so this just makes sure it is cleared, we don't need it anymore
+        # I mean, I think it's a memory leak, I have no idea
         del(Spider.cache)
         gc.collect()
         Spider.cache = {}
 
         return self.pages
+
 
 if __name__ == "__main__":
     import doctest

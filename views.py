@@ -1,9 +1,10 @@
-#!env/bin/python
+#!/usr/bin/env python
+
 import base64
 
 from aiohttp import web
 
-# from api.models import *
+from api.models import *
 
 from api.modules.auth import authorise, refresh
 from api.modules.error import error
@@ -11,17 +12,20 @@ from api.modules.search import Query
 from api.modules.crawl import Spider
 from api.modules.developer import DevQuery
 
+
 async def test(request):
-    return web.Response(text="api.viperidae.app is up")
+    return web.json_response({'status': 200, 'message': 'api.viperidae.api is up'})
+
 
 async def index(request):
     """Indexes a site"""
     params = request.rel_url.query
     uri    = params.get('u')
-    if not uri:   return web.json_response(error(400))
+    if not uri: return web.json_response(error(400))
 
     pages = await Spider(uri).crawl()
     return web.json_response(pages)
+
 
 async def search(request):
     """Basic search function - site url & query"""
@@ -35,6 +39,7 @@ async def search(request):
     pages = await Spider(uri).crawl()
 
     return web.json_response(Query(pages, query).search())
+
 
 async def auth(request):
     """Authenticate devs"""
@@ -58,6 +63,7 @@ async def auth(request):
         return web.json_response(refresh_token(client_id, client_secret, refresh_token))
 
     return web.json_response(error(431))
+
 
 async def dev_search(request):
     """Search function for devs - more features"""
