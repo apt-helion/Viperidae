@@ -63,7 +63,6 @@ class Clients(BaseModel):
         table_name = 'Clients'
 
 class Tokens(BaseModel):
-    id = CharField(column_name='token_id', null=False)
     token = CharField(column_name='token', null=False)
     refresh_token = CharField(column_name='refresh_token', null=False)
     expiry = DateTimeField(column_name='expiry', null=False)
@@ -76,5 +75,3 @@ class Tokens(BaseModel):
 
     class Meta:
         table_name = 'Tokens'
-
-

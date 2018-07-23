@@ -6,15 +6,16 @@ from aiohttp import web
 
 from api.models import *
 
-from api.modules.auth import authorise, refresh
 from api.modules.error import error
+from api.modules.auth import authorise, refresh, get_token_client
+
 from api.modules.search import Query
 from api.modules.crawl import Spider
 from api.modules.developer import DevQuery
 
 
 async def test(request):
-    return web.json_response({'status': 200, 'message': 'api.viperidae.api is up'})
+    return web.json_response({'status': 200, 'message': 'api.viperidae.app is up'})
 
 
 async def index(request):
@@ -45,16 +46,16 @@ async def auth(request):
     """Authenticate devs"""
     post = await request.post()
 
-    auth_header   = request.headers.get('Authorization')
-    head          = auth_header.split("Basic")[1]
+    auth_header   = request.headers.get("Authorization")
+    head          = auth_header.split("Basic ")[1]
     grant_type    = post.get('grant_type')
     refresh_token = post.get('refresh_token', '')
 
     client_id, client_secret = base64.b64decode(head).split(":")
 
-    if not grant_type:    return web.json_response(error(430))
-    if not client_id:     return web.json_response(error(450))
-    if not client_secret: return web.json_response(error(451))
+    if not grant_type:    return web.json_response(error(402))
+    if not client_id:     return web.json_response(error(404))
+    if not client_secret: return web.json_response(error(405))
 
     if grant_type == 'authorization_code':
         return web.json_response(authorise(client_id, client_secret))
@@ -62,9 +63,23 @@ async def auth(request):
     if grant_type == 'refresh_token':
         return web.json_response(refresh_token(client_id, client_secret, refresh_token))
 
-    return web.json_response(error(431))
+    return web.json_response(error(500))
 
 
 async def dev_search(request):
-    """Search function for devs - more features"""
-    pass
+    """Search function for clients - uses client settings"""
+    auth_header = request.headers.get("Authorization")
+    head        = auth_header.split("Bearer ")[1]
+    token       = head[0]
+
+    if not token: return web.json_response(error(403))
+
+    client = get_token_client(token)
+    if 'error' in client: return client # client is an error message
+
+    params = request.rel_url.query
+    query  = params.get('q')
+
+    if not query: return web.json_response(error(401))
+
+    return web.json_response(DevQuery(client, query).search())

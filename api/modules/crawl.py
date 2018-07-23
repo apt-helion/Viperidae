@@ -13,8 +13,10 @@ class Spider():
     Spider class used for crawl a website based of a provided seed uri.
     Used when website is not in db.
 
+    TO-DO: respect robots.txt
+
     Example usage:
-    >>> uri = 'https://blog.justinduch.com'
+    >>> uri     = 'https://blog.justinduch.com'
     >>> spider  = Spider(uri)
     >>> results = spider.crawl()
     >>> results # doctest +ELLPSIS
@@ -124,7 +126,6 @@ class Spider():
                         'links'   : links,
                         'content' : self.get_content(uri)
                     })
-                    print(uri)
 
 
     async def crawl(self):

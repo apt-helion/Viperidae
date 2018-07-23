@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-import re
-
-
 class Query():
     """
     Query ranks pages it is given according to a query term
@@ -15,11 +12,10 @@ class Query():
     [...]
     """
 
-
     def __init__(self, pages, query):
         self.pages = pages
         self.query = query.lower()
-        self.words = re.split(" ", self.query)
+        self.words = self.query.split(" ")
 
         self.ranked_pages = []
 
