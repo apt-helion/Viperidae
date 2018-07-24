@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 
-class Spider():
+class Spider(object):
     """
     Spider class used for crawl a website based of a provided seed uri.
     Used when website is not in db.
@@ -96,7 +96,8 @@ class Spider():
         )
 
         if '?' in url or '#' in url: return None
-        if url.lower().endswith(file_extentions): _file = True
+        for ext in file_extentions:
+            if url.lower().endswith(ext): _file = ext
         if url.endswith('/'): url = url[:-1] # strip any trailing backslashes
 
         return { 'uri': url, 'file': _file }

@@ -7,6 +7,8 @@ Developer docs/api --> [`developer.viperidae.app`](https://developer.viperidae.a
 
 ## Setting up on a development environment 
 ```
+# Make sure MariaDB and MongoDB are installed
+
 # Clone it
 git clone https://github.com/apt-helion/viperidae2.0
 cd viperidae2.0

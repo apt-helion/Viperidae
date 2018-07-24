@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-class Query():
+class Query(object):
     """
     Query ranks pages it is given according to a query term
 

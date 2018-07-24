@@ -11,7 +11,7 @@ from api.modules.auth import authorise, refresh, get_token_client
 
 from api.modules.search import Query
 from api.modules.crawl import Spider
-from api.modules.developer import ClientQuery
+from api.modules.developer import ClientSpider, ClientQuery
 
 
 async def test(request):
@@ -76,6 +76,24 @@ async def auth(request):
     return web.json_response(error(500))
 
 
+async def dev_index(request):
+    """Indexes a site"""
+    try:
+        auth_header = request.headers["Authorization"]
+        head        = auth_header.split("Bearer ")[1]
+    except KeyError:   return web.json_response(error(503))
+    except IndexError: return web.json_response(error(502))
+
+    token = head[0]
+    if not token: return web.json_response(error(403))
+
+    client = get_token_client(token)
+    if 'error' in client: return client # client is an error message
+
+    pages = await ClientSpider(uri).save_pages()
+    return web.json_response(pages)
+
+
 async def dev_search(request):
     """Search function for clients - uses client settings"""
     try:
@@ -95,4 +113,4 @@ async def dev_search(request):
 
     if not query: return web.json_response(error(401))
 
-    return web.json_response(ClientQuery(client, query).search())
+    return web.json_response(ClientQuery(client, query).modify_search())

@@ -1,6 +1,7 @@
 import datetime
 
 from peewee import *
+from pymongo import MongoClient
 from .config import Config
 
 database = Config.DATABASE
@@ -51,6 +52,7 @@ class Clients(BaseModel):
     id = CharField(column_name='client_id', null=False)
     secret = CharField(column_name='client_secret', null=False)
     name = CharField(column_name='name', null=False)
+    website = CharField(column_name='website', null=False)
     description = CharField(column_name='description', null=False)
 
     user = ForeignKeyField(
@@ -61,7 +63,11 @@ class Clients(BaseModel):
 
     @classmethod
     def get_pages(cls):
-        pass
+        mongo_client = MongoClient('localhost', 27017)
+        database     = mongo_client.pages
+        collection   = database[cls.name]
+
+        return collection
 
     class Meta:
         table_name = 'Clients'
