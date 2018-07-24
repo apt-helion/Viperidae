@@ -61,7 +61,8 @@ async def auth(request):
     grant_type    = post.get('grant_type')
     refresh_token = post.get('refresh_token', '')
 
-    client_id, client_secret = base64.b64decode(head).split(":")
+    b64decoded = base64.b64decode(head).decode()
+    client_id, client_secret = b64decoded.split(":")
 
     if not grant_type:    return web.json_response(error(402))
     if not client_id:     return web.json_response(error(404))
@@ -84,13 +85,13 @@ async def dev_index(request):
     except KeyError:   return web.json_response(error(503))
     except IndexError: return web.json_response(error(502))
 
-    token = head[0]
+    token = head
     if not token: return web.json_response(error(403))
 
     client = get_token_client(token)
-    if 'error' in client: return client # client is an error message
+    if type(client) is dict: return client # client is an error message
 
-    pages = await ClientSpider(uri).save_pages()
+    pages = await ClientSpider(client).save_pages()
     return web.json_response(pages)
 
 
@@ -106,7 +107,7 @@ async def dev_search(request):
     if not token: return web.json_response(error(403))
 
     client = get_token_client(token)
-    if 'error' in client: return client # client is an error message
+    if type(client) is dict: return client # client is an error message
 
     params = request.rel_url.query
     query  = params.get('q')

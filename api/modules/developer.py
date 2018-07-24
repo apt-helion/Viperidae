@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 import asyncio
+import json
 
+from bson import json_util
 from pymongo import MongoClient
 
 from .search import Query
@@ -26,12 +28,14 @@ class ClientSpider(Spider):
 
         mongo_client = MongoClient('localhost', 27017)
         database     = mongo_client.pages
-        collection   = database[client.name]
+        collection   = database[self.client.name]
 
         collection.delete_many({}) # delete previous pages
         collection.insert_many(pages) # insert new pages
 
-        return self.pages
+        # Dump loaded BSON to valid JSON string and reload it as dict
+        pages_sanitised = json.loads(json_util.dumps(pages))
+        return pages_sanitised
 
 
 class ClientQuery(Query):

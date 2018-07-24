@@ -39,8 +39,8 @@ class BaseModel(Model):
     class Meta:
         database = database
 
-class Users(BaseModel):
-    id = CharField(column_name='user_id', null=False)
+class User(BaseModel):
+    user = CharField(column_name='user_id', null=False, primary_key=True)
     username = CharField(column_name='username', null=False)
     password = CharField(column_name='password', null=False)
     email = CharField(column_name='email', null=False)
@@ -48,8 +48,8 @@ class Users(BaseModel):
     class Meta:
         table_name = 'Users'
 
-class Clients(BaseModel):
-    id = CharField(column_name='client_id', null=False)
+class Client(BaseModel):
+    client = CharField(column_name='client_id', null=False, primary_key=True)
     secret = CharField(column_name='client_secret', null=False)
     name = CharField(column_name='name', null=False)
     website = CharField(column_name='website', null=False)
@@ -57,8 +57,8 @@ class Clients(BaseModel):
 
     user = ForeignKeyField(
         column_name='user_id',
-        field='id',
-        model=Users,
+        field='user',
+        model=User,
         null=False)
 
     @classmethod
@@ -72,15 +72,15 @@ class Clients(BaseModel):
     class Meta:
         table_name = 'Clients'
 
-class Tokens(BaseModel):
-    token = CharField(column_name='token', null=False)
+class Token(BaseModel):
+    token = CharField(column_name='token_id', null=False, primary_key=True)
     refresh_token = CharField(column_name='refresh_token', null=False)
     expiry = DateTimeField(column_name='expiry', null=False)
 
     client = ForeignKeyField(
         column_name='client_id',
-        field='id',
-        model=Clients,
+        field='client',
+        model=Client,
         null=False)
 
     class Meta:
