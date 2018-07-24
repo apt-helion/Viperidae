@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import asyncio
+
 from pymongo import MongoClient
 
 from .search import Query

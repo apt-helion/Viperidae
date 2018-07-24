@@ -28,8 +28,8 @@ def error(err_no=None):
     """Returns an error message with specified status code"""
     if err_no: return {
         "error": {
-            "status": error,
-            "message": ERROR_MESSAGES[error]
+            "status": err_no,
+            "message": ERROR_MESSAGES[err_no]
         }
     }
 
