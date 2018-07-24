@@ -4,6 +4,7 @@ import os
 import asyncio
 import requests
 import gc
+import re
 
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse, urljoin
@@ -15,31 +16,48 @@ class Spider():
     Used when website is not in db.
 
     Example usage:
-    >>> uri     = 'https://blog.justinduch.com'
-    >>> spider  = Spider(uri)
-    >>> results = spider.crawl()
-    >>> results # doctest +ELLPSIS
+    >>> uri    = 'https://blog.justinduch.com'
+    >>> spider = Spider(uri)
+    >>> spider.crawl() # doctest +ELLPSIS
     [...]
     """
 
     cache = {}
 
-    def __init__(self, uri, limit):
-        self.uri      = uri
-        self.limit    = limit
-        self.hostname = urlparse(self.uri).netloc
-        self.robots   = Spider.get_robots(self.hostname)
+    def __init__(self, uri, limit=None):
+        self.protocol, self.hostname = Spider.get_protocol_hostname(uri)
 
-        self.loop = asyncio.get_event_loop()
+        self.root   = f'{self.protocol}{self.hostname}'
+        self.limit  = limit
+        self.robots = Spider.get_robots(self.hostname)
+        self.loop   = asyncio.get_event_loop()
 
-        # initalise pages with seed link
+        # initalise pages with root
         self.pages = [{
-            'uri'     : self.uri,
-            'links'   : self.get_links(self.uri),
-            'content' : self.get_content(self.uri)
+            'uri'     : self.root,
+            'links'   : self.get_links(self.root),
+            'content' : self.get_content(self.root)
         }]
 
-        self.crawled  = [self.uri] # uris that have been crawled
+        self.crawled  = [self.root] # uris that have been crawled
+
+
+    @staticmethod
+    def get_protocol_hostname(uri):
+        if re.match('(?:http|https)://',uri):
+            protocol = re.match('(?:http|https)://', uri).group()
+        else:
+            protocol = 'https://'
+            uri = f'{protocol}{uri}'
+
+            if requests.head(uri).status_code is not 200:
+                # fallback if https not supported
+                protocol = 'http://'
+                uri = f'{protocol}{uri}'
+
+        hostname = urlparse(uri).netloc
+
+        return protocol, hostname
 
 
     @staticmethod
@@ -49,7 +67,7 @@ class Spider():
 
         for line in robots_file.split("\n"):
             if line.startswith('Disallow'):
-                robots.append(host+line.split(': ')[1].split(' ')[0])
+                robots.append(self.protocol+host+line.split(': ')[1].split(' ')[0])
 
         return robots
 
@@ -69,7 +87,7 @@ class Spider():
 
     def check_url(self, uri):
         """Checks if the uri is a file or a webpage"""
-        url   = urljoin(self.uri, uri) # join in case it's a relative link
+        url   = urljoin(self.root, uri) # join in case it's a relative link
         _file = False
 
         file_extentions = (
@@ -115,14 +133,15 @@ class Spider():
     async def handle_task(self, task_id, work_queue):
         """Handles the async work for crawling"""
         while not work_queue.empty():
-            link = await work_queue.get()
+            link = await work_queue.get() # get the next item
             uri  = link['uri']
 
             if uri not in self.crawled and uri not in self.robots:
                 self.crawled.append(uri)
-                if self.hostname == urlparse(uri).netloc:
 
+                if self.hostname == urlparse(uri).netloc:
                     links = await self.async_get_links(uri)
+
                     for link in links:
                         if not link['file']: work_queue.put_nowait(link)
 
@@ -132,25 +151,20 @@ class Spider():
                         'content' : self.get_content(uri)
                     })
 
-            if len(self.crawled) > self.limit: return
+            if self.limit and len(self.crawled) > self.limit: return
 
 
     async def crawl(self):
         """Sets the async queue, tasks, etc..."""
-        queue = asyncio.Queue()
+        queue = asyncio.Queue() # create new queue
+        for link in self.get_links(self.root): queue.put_nowait(link) # init q with links
 
-        [queue.put_nowait(link) for link in self.get_links(self.uri)]
+        tasks = [self.handle_task(task_id, queue) for task_id in range(10)] # create tasks
+        await asyncio.wait(tasks) # do tasks
 
-        tasks = [self.handle_task(task_id, queue) for task_id in range(10)]
-
-        await asyncio.wait(tasks)
-
-        # I'm pretty sure Spider.cache causes a memory leak
-        # so this just makes sure it is cleared, we don't need it anymore
-        # I mean, I think it's a memory leak, I have no idea
-        del(Spider.cache)
-        gc.collect()
-        Spider.cache = {}
+        del(Spider.cache) # I'm pretty sure Spider.cache causes a memory leak
+        gc.collect() # so this just makes sure it is cleared, we don't need it anymore
+        Spider.cache = {} # I actually have no idea, should probably test it
 
         return self.pages
 
