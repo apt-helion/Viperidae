@@ -17,6 +17,8 @@ ERROR_MESSAGES = {
     # 500-509 invalid <thing>
     500 : 'Invalid grant type',
     501 : 'Invalid refresh token',
+    502 : 'Invalid authentication header',
+    503 : 'Invalid header',
 
     # 550-569 general errors
     550 : 'Token has expired',

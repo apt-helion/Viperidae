@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import asyncio
 import requests
 import gc
@@ -13,8 +14,6 @@ class Spider():
     Spider class used for crawl a website based of a provided seed uri.
     Used when website is not in db.
 
-    TO-DO: respect robots.txt
-
     Example usage:
     >>> uri     = 'https://blog.justinduch.com'
     >>> spider  = Spider(uri)
@@ -25,9 +24,11 @@ class Spider():
 
     cache = {}
 
-    def __init__(self, uri):
+    def __init__(self, uri, limit):
         self.uri      = uri
+        self.limit    = limit
         self.hostname = urlparse(self.uri).netloc
+        self.robots   = Spider.get_robots(self.hostname)
 
         self.loop = asyncio.get_event_loop()
 
@@ -41,24 +42,28 @@ class Spider():
         self.crawled  = [self.uri] # uris that have been crawled
 
 
-    def cache_html(fn):
-        def inner(uri):
-            cache_key = hash(uri)
-            if Spider.cache.get(cache_key): return Spider.cache[cache_key]
+    @staticmethod
+    def get_robots(host):
+        robots      = []
+        robots_file = os.popen(f'curl {host}/robots.txt').read()
 
-            Spider.cache[cache_key] = fn(uri)
-            return Spider.cache[cache_key]
+        for line in robots_file.split("\n"):
+            if line.startswith('Disallow'):
+                robots.append(host+line.split(': ')[1].split(' ')[0])
 
-        return inner
+        return robots
 
 
     @staticmethod
-    @cache_html
     def request_page(uri):
         """Gets the html for a page"""
-        page  = requests.get(uri)
-        html  = BeautifulSoup(page.text, "html.parser")
+        cache_key = hash(uri)
+        if Spider.cache.get(cache_key): return Spider.cache[cache_key]
 
+        page = requests.get(uri)
+        html = BeautifulSoup(page.text, "html.parser")
+
+        Spider.cache[cache_key] = html
         return html
 
 
@@ -68,8 +73,8 @@ class Spider():
         _file = False
 
         file_extentions = (
-            '.jpg', '.png', '.gif', '.pdf', '.docx',
-            '.odt', '.doc', '.pptx', '.csv', '.xlsx'
+            '.jpg', '.png', '.gif', '.pdf', '.docx', '.webm',
+            '.odt', '.doc', '.pptx', '.csv', '.xlsx', '.txt'
         )
 
         if '?' in url or '#' in url: return None
@@ -113,7 +118,7 @@ class Spider():
             link = await work_queue.get()
             uri  = link['uri']
 
-            if uri not in self.crawled and not len(self.crawled) > 200:
+            if uri not in self.crawled and uri not in self.robots:
                 self.crawled.append(uri)
                 if self.hostname == urlparse(uri).netloc:
 
@@ -126,6 +131,8 @@ class Spider():
                         'links'   : links,
                         'content' : self.get_content(uri)
                     })
+
+            if len(self.crawled) > self.limit: return
 
 
     async def crawl(self):

@@ -59,6 +59,10 @@ class Clients(BaseModel):
         model=Users,
         null=False)
 
+    @classmethod
+    def get_pages(cls):
+        pass
+
     class Meta:
         table_name = 'Clients'
 

@@ -11,12 +11,15 @@ from api.modules.auth import authorise, refresh, get_token_client
 
 from api.modules.search import Query
 from api.modules.crawl import Spider
-from api.modules.developer import DevQuery
+from api.modules.developer import ClientQuery
 
 
 async def test(request):
     return web.json_response({'status': 200, 'message': 'api.viperidae.app is up'})
 
+##########################
+# API for public viewing #
+##########################
 
 async def index(request):
     """Indexes a site"""
@@ -24,7 +27,7 @@ async def index(request):
     uri    = params.get('u')
     if not uri: return web.json_response(error(400))
 
-    pages = await Spider(uri).crawl()
+    pages = await Spider(uri, 50).crawl()
     return web.json_response(pages)
 
 
@@ -37,17 +40,24 @@ async def search(request):
     if not uri:   return web.json_response(error(400))
     if not query: return web.json_response(error(401))
 
-    pages = await Spider(uri).crawl()
+    pages = await Spider(uri, 50).crawl()
 
     return web.json_response(Query(pages, query).search())
 
+###################
+# API for clients #
+###################
 
 async def auth(request):
     """Authenticate devs"""
     post = await request.post()
 
-    auth_header   = request.headers.get("Authorization")
-    head          = auth_header.split("Basic ")[1]
+    try:
+        auth_header = request.headers["Authorization"]
+        head        = auth_header.split("Basic ")[1]
+    except KeyError:   return web.json_response(error(503))
+    except IndexError: return web.json_response(error(502))
+
     grant_type    = post.get('grant_type')
     refresh_token = post.get('refresh_token', '')
 
@@ -68,10 +78,13 @@ async def auth(request):
 
 async def dev_search(request):
     """Search function for clients - uses client settings"""
-    auth_header = request.headers.get("Authorization")
-    head        = auth_header.split("Bearer ")[1]
-    token       = head[0]
+    try:
+        auth_header = request.headers["Authorization"]
+        head        = auth_header.split("Bearer ")[1]
+    except KeyError:   return web.json_response(error(503))
+    except IndexError: return web.json_response(error(502))
 
+    token = head[0]
     if not token: return web.json_response(error(403))
 
     client = get_token_client(token)
@@ -82,4 +95,4 @@ async def dev_search(request):
 
     if not query: return web.json_response(error(401))
 
-    return web.json_response(DevQuery(client, query).search())
+    return web.json_response(ClientQuery(client, query).search())
