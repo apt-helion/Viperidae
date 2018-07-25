@@ -37,8 +37,9 @@ If your web browser allows for viewing JSON, just put the requests into there. e
 ```
 
 ### POST requests
-Use the script (coming soon) or cURL. e.g.
+Use the script or cURL. e.g.
 ```
 curl --headers "Authorization: Basic {base64string}" --data "q=test" 0.0.0.0:8080/devsearch
 ```
+This isn't the best way... just use the scripts in `tests/`.
 
