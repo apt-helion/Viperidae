@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import uuid
 import requests
 import base64
 import json
@@ -12,6 +11,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 from api.models import *
 
+
 def authenticate(client):
     url           = 'http://0.0.0.0:8080/v1/auth'
     base64encoded = base64.b64encode(f'{client.client}:{client.secret}'.encode())
@@ -22,6 +22,8 @@ def authenticate(client):
     response_data = json.loads(post_request.text)
 
     print('\nAuth response:')
+
+    pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(response_data)
 
     return response_data
@@ -56,5 +58,4 @@ def get_client():
 
 
 if __name__ == '__main__':
-    pp = pprint.PrettyPrinter(indent=4)
     index_site(get_client())

@@ -103,7 +103,7 @@ async def dev_search(request):
     except KeyError:   return web.json_response(error(503))
     except IndexError: return web.json_response(error(502))
 
-    token = head[0]
+    token = head
     if not token: return web.json_response(error(403))
 
     client = get_token_client(token)

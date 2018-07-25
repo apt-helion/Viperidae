@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import re
+
+
 class Query(object):
     """
     Query ranks pages it is given according to a query term

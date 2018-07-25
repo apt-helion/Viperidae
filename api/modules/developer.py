@@ -45,15 +45,20 @@ class ClientQuery(Query):
 
     def __init__(self, client, query):
         self.client = client
-        self.pages  = client.get_pages()
-        self.query  = query
+
+        pages  = client.get_pages(client.name)
+        query  = query
+
+        super().__init__(pages, query)
 
 
     def modify_search(self):
         """Modify search with client settings"""
         pages = self.search()
 
-        return pages
+        # Dump loaded BSON to valid JSON string and reload it as dict
+        pages_sanitised = json.loads(json_util.dumps(pages))
+        return pages_sanitised
 
 
 if __name__ == "__main__":

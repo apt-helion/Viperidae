@@ -11,7 +11,7 @@ from api.models import *
 
 def create():
     Client.create(
-        id = uuid.uuid4().hex,
+        client = uuid.uuid4().hex,
         secret = uuid.uuid4().hex,
         name = input('Enter name: '),
         website = input('Enter website: '),

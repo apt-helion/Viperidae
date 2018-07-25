@@ -45,6 +45,7 @@ class User(BaseModel):
     password = CharField(column_name='password', null=False)
     email = CharField(column_name='email', null=False)
 
+
     class Meta:
         table_name = 'Users'
 
@@ -61,13 +62,19 @@ class Client(BaseModel):
         model=User,
         null=False)
 
+
     @classmethod
-    def get_pages(cls):
+    def get_pages(cls, name):
         mongo_client = MongoClient('localhost', 27017)
         database     = mongo_client.pages
-        collection   = database[cls.name]
+        collection   = database[name]
 
-        return collection
+        pages = []
+        for page in collection.find():
+            pages.append(page)
+
+        return pages
+
 
     class Meta:
         table_name = 'Clients'
@@ -82,6 +89,7 @@ class Token(BaseModel):
         field='client',
         model=Client,
         null=False)
+
 
     class Meta:
         table_name = 'Tokens'
