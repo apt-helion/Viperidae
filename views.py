@@ -4,14 +4,14 @@ import base64
 
 from aiohttp import web
 
-from api.models import *
+from data.models import *
 
-from api.modules.error import error
-from api.modules.auth import authorise, refresh, get_token_client
+from api.error import error
+from api.auth import authorise, refresh, get_token_client
 
-from api.modules.search import Query
-from api.modules.crawl import Spider
-from api.modules.developer import ClientSpider, ClientQuery
+from api.search import Query
+from api.crawl import Spider
+from api.developer import ClientSpider, ClientQuery
 
 
 async def test(request):
