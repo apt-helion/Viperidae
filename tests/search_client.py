@@ -3,8 +3,9 @@
 import requests
 import json
 import pprint
+import base64
 
-from index_client import authenticate, get_client
+from index_client import get_client
 
 import sys
 from os import path
@@ -14,15 +15,12 @@ from data.models import *
 
 
 def search_client(client):
-    print(f'Authenticating {client.name}...')
-
-    response = authenticate(client)
+    base64encoded = base64.b64encode(f'{client.client}:{client.secret}'.encode())
+    header        = {'Authorisation': f'Bearer {base64encoded.decode()}'}
 
     query = input('\nEnter search query: ')
 
     url      = 'http://0.0.0.0:8080/v1/search'
-    token    = response.get('access_token') # get access token
-    header   = {'Authorization': f'Bearer {token}'}
     payload  = {'q': query}
 
     get_request   = requests.get(url, params=payload, headers=header)

@@ -78,18 +78,3 @@ class Client(BaseModel):
 
     class Meta:
         table_name = 'Clients'
-
-class Token(BaseModel):
-    token = CharField(column_name='token_id', null=False, primary_key=True)
-    refresh_token = CharField(column_name='refresh_token', null=False)
-    expiry = DateTimeField(column_name='expiry', null=False)
-
-    client = ForeignKeyField(
-        column_name='client_id',
-        field='client',
-        model=Client,
-        null=False)
-
-
-    class Meta:
-        table_name = 'Tokens'

@@ -36,22 +36,6 @@ CREATE TABLE `Clients` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
-
-# Dump of table Tokens
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `Tokens`;
-
-CREATE TABLE `Tokens` (
-  `token_id` varchar(56) NOT NULL DEFAULT '''''',
-  `refresh_token` varchar(56) NOT NULL DEFAULT '''''',
-  `expiry` datetime NOT NULL,
-  `client_id` varchar(56) NOT NULL DEFAULT '''''',
-  PRIMARY KEY (`token_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
-
 # Dump of table Users
 # ------------------------------------------------------------
 

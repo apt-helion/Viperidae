@@ -7,7 +7,7 @@ from aiohttp import web
 from data.models import *
 
 from api.error import error
-from api.auth import authorise, refresh, get_token_client
+from api.auth import authorise
 
 from api.search import Query
 from api.crawl import Spider
@@ -48,48 +48,19 @@ async def search(request):
 # API for clients #
 ###################
 
-async def auth(request):
-    """Authenticate devs"""
-    post = await request.post()
-
-    try:
-        auth_header = request.headers["Authorization"]
-        head        = auth_header.split("Basic ")[1]
-    except KeyError:   return web.json_response(error(503))
-    except IndexError: return web.json_response(error(502))
-
-    grant_type    = post.get('grant_type')
-    refresh_token = post.get('refresh_token', '')
-
-    b64decoded = base64.b64decode(head).decode()
-    client_id, client_secret = b64decoded.split(":")
-
-    if not grant_type:    return web.json_response(error(402))
-    if not client_id:     return web.json_response(error(404))
-    if not client_secret: return web.json_response(error(405))
-
-    if grant_type == 'authorization_code':
-        return web.json_response(authorise(client_id, client_secret))
-
-    if grant_type == 'refresh_token':
-        return web.json_response(refresh_token(client_id, client_secret, refresh_token))
-
-    return web.json_response(error(500))
-
-
 async def dev_index(request):
     """Indexes a site"""
     try:
-        auth_header = request.headers["Authorization"]
+        auth_header = request.headers["Authorisation"]
         head        = auth_header.split("Bearer ")[1]
     except KeyError:   return web.json_response(error(503))
     except IndexError: return web.json_response(error(502))
 
-    token = head
-    if not token: return web.json_response(error(403))
+    b64decoded = base64.b64decode(head).decode()
+    client_id, client_secret = b64decoded.split(":")
 
-    client = get_token_client(token)
-    if type(client) is dict: return client # client is an error message
+    client = authorise(client_id, client_secret)
+    if not client: return web.json_response(error(410))
 
     pages = await ClientSpider(client).save_pages()
     return web.json_response(pages)
@@ -98,16 +69,16 @@ async def dev_index(request):
 async def dev_search(request):
     """Search function for clients - uses client settings"""
     try:
-        auth_header = request.headers["Authorization"]
+        auth_header = request.headers["Authorisation"]
         head        = auth_header.split("Bearer ")[1]
     except KeyError:   return web.json_response(error(503))
     except IndexError: return web.json_response(error(502))
 
-    token = head
-    if not token: return web.json_response(error(403))
+    b64decoded = base64.b64decode(head).decode()
+    client_id, client_secret = b64decoded.split(":")
 
-    client = get_token_client(token)
-    if type(client) is dict: return client # client is an error message
+    client = authorise(client_id, client_secret)
+    if not client: return web.json_response(error(410))
 
     params = request.rel_url.query
     query  = params.get('q')

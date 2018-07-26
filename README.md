@@ -1,5 +1,5 @@
-# Viperidae2.0 API
-API and main application for viperidae2.0
+# Viperidae API
+API and main application for viperidae
 
 Main site --> [`viperidae.app`](https://viperidae.app) : [`viperidae-site`](https://github.com/apt-helion/viperidae-site)
 
