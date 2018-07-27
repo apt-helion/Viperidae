@@ -142,7 +142,9 @@ class Spider(object):
             if uri not in self.crawled and uri not in self.robots:
                 self.crawled.append(uri)
 
-                if self.hostname == urlparse(uri).netloc:
+                uri_netloc = urlparse(uri).netloc
+
+                if self.hostname in uri_netloc or uri_netloc in self.hostname:
                     links = await self.async_get_links(uri)
 
                     for link in links:
