@@ -85,6 +85,35 @@ class Spider(object):
         return html
 
 
+    @staticmethod
+    def strip_escape( string):
+        """
+        Removes all unwanted escape seqences: '\\n', '\\x0b' etc.
+        from the input string
+        """
+
+        ESCAPE_SEQUENCE_RE = re.compile(r'''
+            ( \\U........      # 8-digit hex escapes
+            | \\u....          # 4-digit hex escapes
+            | \\x..            # 2-digit hex escapes
+            | \\[0-7]{1-3}     # Octal escapes
+            | \\N\{[^]}+\}     # Unicode characters by name
+            | \\[\\'"abfnrtv]  # Single-character escapes
+            )''', re.UNICODE | re.VERBOSE)
+
+        def decode_match(match):
+            return codecs.decode(match.group(0), 'unicode-escape')
+
+        return ESCAPE_SEQUENCE_RE.sub(decode_match, string)
+
+
+    @staticmethod
+    def get_blurb(text):
+        """Gets first 53 words of text"""
+        words = text.split(' ')
+        return " ".join(words[:53])
+
+
     def check_url(self, uri):
         """Checks if the uri is a file or a webpage"""
         url   = urljoin(self.root, uri) # join in case it's a relative link
@@ -107,9 +136,14 @@ class Spider(object):
         """Gets important text from a webpage"""
         html = self.request_page(uri)
 
+        text   = Spider.strip_escape(html.get_text())
+        p_text = "".join([p.get_text() for p in html.find_all('p')])
+
         return {
             'title' : html.title.string,
-            'text'  : html.get_text()
+            'blurb' : Spider.get_blurb(p_text),
+            'ptext' : p_text,
+            'text'  : text
         }
 
 
