@@ -29,7 +29,7 @@ class Spider(object):
 
         self.root   = f'{self.protocol}{self.hostname}'
         self.limit  = limit
-        self.robots = Spider.get_robots(self.hostname)
+        self.robots = Spider.get_robots(self.hostname, self.protocol)
         self.loop   = asyncio.get_event_loop()
 
         # initalise pages with root
@@ -61,13 +61,13 @@ class Spider(object):
 
 
     @staticmethod
-    def get_robots(host):
+    def get_robots(host, protocol):
         robots      = []
         robots_file = os.popen(f'curl {host}/robots.txt').read()
 
         for line in robots_file.split("\n"):
             if line.startswith('Disallow'):
-                robots.append(self.protocol+host+line.split(': ')[1].split(' ')[0])
+                robots.append(protocol+host+line.split(': ')[1].split(' ')[0])
 
         return robots
 
@@ -137,6 +137,8 @@ class Spider(object):
             link = await work_queue.get() # get the next item
             uri  = link['uri']
 
+            if self.limit and len(self.crawled) > self.limit: continue
+
             if uri not in self.crawled and uri not in self.robots:
                 self.crawled.append(uri)
 
@@ -151,8 +153,6 @@ class Spider(object):
                         'links'   : links,
                         'content' : self.get_content(uri)
                     })
-
-            if self.limit and len(self.crawled) > self.limit: return
 
 
     async def crawl(self):
