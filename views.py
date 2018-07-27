@@ -44,8 +44,9 @@ async def search(request):
     uri    = params.get('u')
     query  = params.get('q')
 
-    if not uri:   return web.json_response(error(400))
-    if not query: return web.json_response(error(401))
+    if not uri:            return web.json_response(error(400))
+    if not query:          return web.json_response(error(401))
+    if not send_head(uri): return web.json_response(error(411))
 
     pages = await Spider(uri, 50).crawl()
 
