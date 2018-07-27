@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
 from aiohttp import web
-from routes import setup_routes
+from views import setup_routes
 
 async def factory():
     app = web.Application()
-    setup_routes(app)
     return app
 
 if __name__ == "__main__":
