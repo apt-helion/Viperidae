@@ -7,13 +7,16 @@ from aiohttp import web
 from data.models import *
 
 from api.error import error
-from api.auth import authorise
+from api.modules import send_head, authorise
 
 from api.search import Query
 from api.crawl import Spider
 from api.developer import ClientSpider, ClientQuery
 
 
+routes = web.RouteTableDef()
+
+@routes.get('/')
 async def test(request):
     return web.json_response({'status': 200, 'message': 'api.viperidae.app is up'})
 
@@ -21,16 +24,20 @@ async def test(request):
 # API for public viewing #
 ##########################
 
+@routes.get('/index')
 async def index(request):
     """Indexes a site"""
     params = request.rel_url.query
     uri    = params.get('u')
-    if not uri: return web.json_response(error(400))
+
+    if not uri:            return web.json_response(error(400))
+    if not send_head(uri): return web.json_response(error(411))
 
     pages = await Spider(uri, 50).crawl()
     return web.json_response(pages)
 
 
+@routes.get('/search')
 async def search(request):
     """Basic search function - site url & query"""
     params = request.rel_url.query
@@ -48,6 +55,7 @@ async def search(request):
 # API for clients #
 ###################
 
+@routes.get('/v1/index')
 async def dev_index(request):
     """Indexes a site"""
     try:
@@ -66,6 +74,7 @@ async def dev_index(request):
     return web.json_response(pages)
 
 
+@routes.get('/v1/search')
 async def dev_search(request):
     """Search function for clients - uses client settings"""
     try:
@@ -86,3 +95,8 @@ async def dev_search(request):
     if not query: return web.json_response(error(401))
 
     return web.json_response(ClientQuery(client, query).modify_search())
+
+
+# Setup Routes
+def setup_routes(app):
+    app.router.add_routes(routes)
