@@ -1,7 +1,7 @@
 requests==2.20.0
 gunicorn==19.8.1
 beautifulsoup4==4.6.0
-Jinja2==2.10
+Jinja2==2.10.1
 peewee==3.0.18
 pycparser==2.18
 pymysql==0.8.0
